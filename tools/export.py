@@ -62,6 +62,7 @@ def main(args):
         os.makedirs(OUT_DIR)
     # Load the data configurations.
     data_configs = None
+    #CHECK HERE LAMIE
     if args.data is not None:
         with open(args.data) as file:
             data_configs = yaml.safe_load(file)

@@ -115,7 +115,7 @@ def collect_all_images(dir_test):
     else:
         test_images.append(dir_test)
     return test_images   
-
+#CHECK HERE LAMIE
 def main(args):
     CLASSES = None
     data_configs = None

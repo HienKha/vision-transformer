@@ -13,18 +13,19 @@ class DETRModel(nn.Module):
             pretrained=True,
         )
         self.out1 = nn.Linear(
-            in_features1=self.model.class_embed.out_features1, 
+            in_features1=self.model.class_embed.out_features, 
             out_features1=num_classes
         )
 
         self.out2 = nn.Linear(
-            in_features2=self.model.class_embed.out_features2, 
+            in_features2=self.model.class_embed.out_features, 
             out_features2=num_birads
         )
         
     def forward(self, images):
         d = self.model(images)
-        d['pred_logits'] = self.out(d['pred_logits'])
+        d['pred_logits1'] = self.out1(d['pred_logits'])
+        d['pred_logits2'] = self.out2(d['pred_logits'])
         return d
     
     def parameter_groups(self):

@@ -5,15 +5,25 @@ VALID_DIR_IMAGES: '../../object_detection/input/Aquarium Combined.v2-raw-1024.vo
 VALID_DIR_LABELS: '../../object_detection/input/Aquarium Combined.v2-raw-1024.voc/valid'
 
 # Class names.
+# classes = lesion types
 CLASSES: [
     '__background__',
-    'fish', 'jellyfish', 'penguin',
-    'shark', 'puffin', 'stingray',
-    'starfish'
+    'Architectural_distortion',
+    'Asymmetry',
+    'Mass',
+    'Microcalcification'
+]
+
+BIRADS: [
+    "BIRADS_2",
+    "BIRADS_3",
+    "BIRADS_4",
+    "BIRADS_5"
 ]
 
 # Number of classes (object classes + 1 for background).
-NC: 8
+NC1: 5
+NC2: 4
 
 # Whether to save the predictions of the validation set while training.
 SAVE_VALID_PREDICTION_IMAGES: True

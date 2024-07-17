@@ -100,6 +100,7 @@ if __name__ == '__main__':
     except: # Else use the validation images.
         VALID_DIR_IMAGES = data_configs['VALID_DIR_IMAGES']
         VALID_DIR_LABELS = data_configs['VALID_DIR_LABELS']
+    #CHECK HERE LAMIE
     NUM_CLASSES = data_configs['NC']
     CLASSES = data_configs['CLASSES']
     NUM_WORKERS = args.workers

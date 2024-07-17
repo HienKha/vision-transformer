@@ -218,7 +218,7 @@ def set_infer_dir(dir_name=None):
         new_dir_name = f"runs/inference/res_{next_dir_num}"
         os.makedirs(new_dir_name, exist_ok=True)
         return new_dir_name
-
+#CHECK HERE LAMIE
 def load_weights(
     args, device, DETRModel, data_configs, NUM_CLASSES, CLASSES, video=False
 ):
