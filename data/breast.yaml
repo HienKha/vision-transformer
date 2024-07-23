@@ -22,8 +22,8 @@ BIRADS: [
 ]
 
 # Number of classes (object classes + 1 for background).
-NC1: 5
-NC2: 4
+NC: 5
+NBR: 4
 
 # Whether to save the predictions of the validation set while training.
 SAVE_VALID_PREDICTION_IMAGES: True

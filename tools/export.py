@@ -68,6 +68,8 @@ def main(args):
             data_configs = yaml.safe_load(file)
         NUM_CLASSES = data_configs['NC']
         CLASSES = data_configs['CLASSES']
+        NUM_BIRADS = data_configs['NBR'] 
+        BIRADS = data_configs['BIRADS']
     DEVICE = args.device
     model, CLASSES, data_path = load_weights(
         args, 

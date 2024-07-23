@@ -24,6 +24,7 @@ class DETRDataset(Dataset):
         labels_path, 
         img_size, 
         classes, 
+        birads,
         transforms=None, 
         use_train_aug=False,
         train=False, 
@@ -36,6 +37,7 @@ class DETRDataset(Dataset):
         self.labels_path = labels_path
         self.img_size = img_size
         self.classes = classes
+        self.birads = birads
         self.train = train
         self.mosaic = mosaic
         self.square_training = square_training
@@ -90,7 +92,9 @@ class DETRDataset(Dataset):
 
         boxes = []
         orig_boxes = []
+        #2 items in list of 2 lists
         labels = []
+        birads = []
         
         # Get the height and width of the image.
         image_width = image.shape[1]
@@ -104,7 +108,8 @@ class DETRDataset(Dataset):
                 # Map the current object name to `classes` list to get
                 # the label index and append to `labels` list.
                 labels.append(self.classes.index(member.find('name').text) - 1)
-                
+                birads.append(self.birads.index(member.find('name2').text) - 1)
+
                 # xmin = left corner x-coordinates
                 xmin = int(float(member.find('bndbox').find('xmin').text))
                 # xmax = right corner x-coordinates
@@ -161,8 +166,9 @@ class DETRDataset(Dataset):
         iscrowd = torch.zeros((boxes.shape[0],), dtype=torch.int64) if boxes_length > 0 else torch.as_tensor(boxes, dtype=torch.float32)
         # Labels to tensor.
         labels = torch.as_tensor(labels, dtype=torch.int64)
+        birads = torch.as_tensor(birads, dtype=torch.int64)
         return image, image_resized, orig_boxes, \
-            boxes, labels, area, iscrowd, (image_width, image_height)
+            boxes, labels, birads, area, iscrowd, (image_width, image_height)
 
     def check_image_and_annotation(
         self, 
@@ -225,10 +231,11 @@ class DETRDataset(Dataset):
         # result_image = np.full((h, w, 3), 1, dtype=np.float32)
         result_boxes = []
         result_classes = []
+        result_birads = []
 
         for i, index in enumerate(indices):
             _, image_resized, orig_boxes, boxes, \
-            labels, area, iscrowd, dims = self.load_image_and_labels(
+            labels, birads, area, iscrowd, dims = self.load_image_and_labels(
                 index=index
             )
 
@@ -260,8 +267,10 @@ class DETRDataset(Dataset):
 
                 result_boxes.append(boxes)
                 result_classes += labels
+                result_birads  += birads
 
         final_classes = []
+        final_birads = []
         if len(result_boxes) > 0:
             result_boxes = np.concatenate(result_boxes, 0)
             np.clip(result_boxes[:, 0:], 0, 2 * s, out=result_boxes[:, 0:])
@@ -269,6 +278,7 @@ class DETRDataset(Dataset):
             for idx in range(len(result_boxes)):
                 if ((result_boxes[idx, 2] - result_boxes[idx, 0]) * (result_boxes[idx, 3] - result_boxes[idx, 1])) > 0:
                     final_classes.append(result_classes[idx])
+                    final_birads.append(result_birads[idx])
             result_boxes = result_boxes[
                 np.where((result_boxes[:, 2] - result_boxes[:, 0]) * (result_boxes[:, 3] - result_boxes[:, 1]) > 0)
             ]
@@ -277,26 +287,26 @@ class DETRDataset(Dataset):
             result_image, result_boxes, self.img_size
         )
         return result_image, torch.tensor(result_boxes), \
-            torch.tensor(np.array(final_classes)), area, iscrowd, dims
+            torch.tensor(np.array(final_classes)), torch.tensor(np.array(final_birads)), area, iscrowd, dims
 
     def __getitem__(self, idx):
         # Capture the image name and the full image path.
         if not self.train:
             image, image_resized, orig_boxes, boxes, \
-                labels, area, iscrowd, dims = self.load_image_and_labels(
+                labels, birads, area, iscrowd, dims = self.load_image_and_labels(
                 index=idx
             )
 
         if self.train:
             mosaic_prob = random.uniform(0.0, 1.0)
             if self.mosaic >= mosaic_prob:
-                image_resized, boxes, labels, \
+                image_resized, boxes, labels, birads, \
                     area, iscrowd, dims = self.load_cutmix_image_and_boxes(
                     idx, resize_factor=(self.img_size, self.img_size)
                 )
             else:
                 image, image_resized, orig_boxes, boxes, \
-                    labels, area, iscrowd, dims = self.load_image_and_labels(
+                    labels, birads, area, iscrowd, dims = self.load_image_and_labels(
                     index=idx
                 )
 
@@ -304,6 +314,7 @@ class DETRDataset(Dataset):
         target = {}
         target["boxes"] = boxes
         target["labels"] = labels
+        target["birads"] = birads
         target["area"] = area
         target["iscrowd"] = iscrowd
         image_id = torch.tensor([idx])
@@ -313,13 +324,15 @@ class DETRDataset(Dataset):
             train_aug = get_train_aug()
             sample = train_aug(image=image_resized,
                                      bboxes=target['boxes'],
-                                     labels=labels)
+                                     labels=labels,
+                                     birads=birads)
             image_resized = sample['image']
             # target['boxes'] = torch.Tensor(sample['bboxes']).to(torch.float)
         else:
             sample = self.transforms(image=image_resized,
                                      bboxes=target['boxes'],
-                                     labels=labels)
+                                     labels=labels,
+                                     birads=birads)
             image_resized = sample['image']
             # target['boxes'] = torch.Tensor(sample['bboxes']).to(torch.float)
 
@@ -356,6 +369,7 @@ def create_train_dataset(
     train_dir_labels, 
     img_size, 
     classes,
+    birads,
     use_train_aug=False,
     mosaic=0.0,
     square_training=False
@@ -365,6 +379,7 @@ def create_train_dataset(
         train_dir_labels,
         img_size, 
         classes, 
+        birads,
         get_train_transform(),
         use_train_aug=use_train_aug,
         train=True, 
@@ -377,6 +392,7 @@ def create_valid_dataset(
     valid_dir_labels, 
     img_size, 
     classes,
+    birads,
     square_training=False
 ):
     valid_dataset = DETRDataset(
@@ -384,6 +400,7 @@ def create_valid_dataset(
         valid_dir_labels, 
         img_size, 
         classes, 
+        birads,
         get_valid_transform(),
         train=False, 
         square_training=square_training

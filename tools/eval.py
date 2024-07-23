@@ -103,6 +103,8 @@ if __name__ == '__main__':
     #CHECK HERE LAMIE
     NUM_CLASSES = data_configs['NC']
     CLASSES = data_configs['CLASSES']
+    NUM_BIRADS = data_configs['NBR'] 
+    BIRADS = data_configs['BIRADS']
     NUM_WORKERS = args.workers
     DEVICE = args.device
     BATCH_SIZE = args.batch
@@ -120,6 +122,7 @@ if __name__ == '__main__':
         VALID_DIR_LABELS, 
         IMAGE_SIZE, 
         CLASSES,
+        BIRADS,
         square_training=args.square_training
     )
     valid_sampler = SequentialSampler(valid_dataset)

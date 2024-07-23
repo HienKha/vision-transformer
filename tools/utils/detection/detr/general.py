@@ -127,8 +127,10 @@ def show_tranformed_image(train_loader, device, classes, colors):
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             boxes = targets[i]['boxes'].cpu().numpy().astype(np.float32)
             labels = targets[i]['labels'].cpu().numpy().astype(np.int32)
+            birads = targets[i]['birads'].cpu().numpy().astype(np.int32)
             # Get all the predicited class names.
             pred_classes = [classes[i] for i in targets[i]['labels'].cpu().numpy() + 1]
+            pred_birads = [classes[i] for i in targets[i]['birads'].cpu().numpy() + 1]
             sample = images[i].permute(1, 2, 0).cpu().numpy()
             sample = denormalize(sample, IMG_MEAN, IMG_STD)
             sample = cv2.cvtColor(sample, cv2.COLOR_RGB2BGR)
@@ -150,6 +152,7 @@ def show_tranformed_image(train_loader, device, classes, colors):
                 )
                 p1, p2 = (int(xmin), int(ymin)), (int(xmax), int(ymax))
                 class_name = pred_classes[box_num]
+                birads_name = pred_birads[box_num]
                 color = colors[classes.index(class_name)]
                 cv2.rectangle(
                     sample,
@@ -161,6 +164,7 @@ def show_tranformed_image(train_loader, device, classes, colors):
                 )
                 w, h = cv2.getTextSize(
                     class_name, 
+                    birads_name,
                     0, 
                     fontScale=lw / 3, 
                     thickness=tf
@@ -170,6 +174,7 @@ def show_tranformed_image(train_loader, device, classes, colors):
                 cv2.putText(
                     sample, 
                     class_name,
+                    birads_name,
                     (p1[0], p1[1] - 5 if outside else p1[1] + h + 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 
                     0.8, 
@@ -220,7 +225,7 @@ def set_infer_dir(dir_name=None):
         return new_dir_name
 #CHECK HERE LAMIE
 def load_weights(
-    args, device, DETRModel, data_configs, NUM_CLASSES, CLASSES, video=False
+    args, device, DETRModel, data_configs, NUM_CLASSES, CLASSES, NUM_BIRADS, BIRADS, video=False
 ):
     data_path = None
     if args.weights is None:
@@ -237,6 +242,8 @@ def load_weights(
                 data_path = data_configs['image_path']
             NUM_CLASSES = data_configs['NC']
             CLASSES = data_configs['CLASSES']
+            NUM_BIRADS = data_configs['NBR'] 
+            BIRADS = data_configs['BIRADS']
         model = torch.hub.load(
             'facebookresearch/detr', 
             args.model, 
@@ -249,7 +256,9 @@ def load_weights(
             data_configs = True
             NUM_CLASSES = ckpt['config']['NC']
             CLASSES = ckpt['config']['CLASSES']
-        model = DETRModel(num_classes=NUM_CLASSES, model=ckpt['model_name'])
+            NUM_BIRADS = ckpt['config']['NBR']
+            BIRADS = ckpt['config']['BIRADS']
+        model = DETRModel(num_classes=NUM_CLASSES, num_birads=NUM_BIRADS, model=ckpt['model_name'])
         model.load_state_dict(ckpt['model_state_dict'])
 
-    return model, CLASSES, data_path
+    return model, CLASSES, BIRADS, data_path

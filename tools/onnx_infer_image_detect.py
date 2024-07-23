@@ -124,6 +124,8 @@ def main(args):
             data_configs = yaml.safe_load(file)
         NUM_CLASSES = data_configs['NC']
         CLASSES = data_configs['CLASSES']
+        NUM_BIRADS = data_configs['NBR'] 
+        BIRADS = data_configs['BIRADS']
     
     DEVICE = args.device
     OUT_DIR = set_infer_dir(args.name)
@@ -182,6 +184,7 @@ def main(args):
                 outputs, 
                 args.threshold,
                 CLASSES,
+                BIRADS,
                 orig_image,
                 args 
             )
@@ -190,6 +193,7 @@ def main(args):
                 pred_classes,
                 scores,
                 CLASSES,
+                BIRADS,
                 COLORS,
                 orig_image,
                 args

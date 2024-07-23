@@ -169,10 +169,13 @@ def main(args):
     VALID_DIR_LABELS = os.path.normpath(data_configs['VALID_DIR_LABELS'])
     CLASSES = data_configs['CLASSES']
     NUM_CLASSES = data_configs['NC']
+    NUM_BIRADS = data_configs['NBR'] 
+    BIRADS = data_configs['BIRADS']
     LR = args.learning_rate
     EPOCHS = args.epochs
     DEVICE = args.device
     NUM_CLASSES = len(CLASSES)
+    NUM_BIRADS = len(BIRADS)
     IMAGE_SIZE = args.imgsz
     BATCH_SIZE = args.batch
     IS_DISTRIBUTED = False
@@ -186,6 +189,7 @@ def main(args):
         TRAIN_DIR_LABELS,
         IMAGE_SIZE, 
         CLASSES,
+        BIRADS,
         use_train_aug=args.use_train_aug,
         mosaic=args.mosaic,
         square_training=True
@@ -196,6 +200,7 @@ def main(args):
         VALID_DIR_LABELS, 
         IMAGE_SIZE, 
         CLASSES,
+        BIRADS,
         square_training=True
     )
 
@@ -220,12 +225,12 @@ def main(args):
     )
 
     if VISUALIZE_TRANSFORMED_IMAGES:
-        show_tranformed_image(train_loader, DEVICE, CLASSES, COLORS)
+        show_tranformed_image(train_loader, DEVICE, CLASSES, BIRADS, COLORS)
 
     matcher = HungarianMatcher(cost_giou=2,cost_class=1,cost_bbox=5)
     weight_dict = {'loss_ce': 1, 'loss_bbox': 5, 'loss_giou': 2}
     losses = ['labels', 'boxes', 'cardinality']
-    model = DETRModel(num_classes=NUM_CLASSES, model=args.model)
+    model = DETRModel(num_classes=NUM_CLASSES, num_birads=NUM_BIRADS, model=args.model)
     if args.weights is not None:
         print(f"Loading weights from {args.weights}...")
         ckpt = torch.load(args.weights)
@@ -249,6 +254,7 @@ def main(args):
         print(f"{total_trainable_params:,} training parameters.")
 
     criterion = SetCriterion(
+        #CHECK THIS LAMIE
         NUM_CLASSES-1, 
         matcher, 
         weight_dict, 
